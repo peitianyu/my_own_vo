@@ -8,6 +8,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "core/tt_log.h"
+
 
 class StereoVO
 {
@@ -40,6 +42,8 @@ public:
 
     void update(cv::Mat& left_img, cv::Mat& right_img, bool visulization = false)
     {
+        if(left_img.empty() || right_img.empty()) return;
+        
         if (feat3ds_.empty() || feats_.empty()) {
             stereo_detect(left_img, right_img);
         } else  {
@@ -51,14 +55,20 @@ public:
     Eigen::Quaterniond get_q() const { return q_; }
     Eigen::Vector3d get_t() const { return t_; }
     std::vector<cv::Point3f> get_feat3ds() const { return feat3ds_; }
+    Eigen::Matrix4d get_T() const {
+        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+        T.block<3, 3>(0, 0) = q_.toRotationMatrix();
+        T.block<3, 1>(0, 3) = t_;
+        return T;
+    }
 private:
     uint stereo_track(cv::Mat &ref_frame, cv::Mat &img, bool visulization)
-    {
+    {        
         std::vector<uchar> status;
         std::vector<float> err;
         std::vector<cv::Point2f> feats_curr;
-        cv::calcOpticalFlowPyrLK(ref_frame, img, feats_, feats_curr, status, err, cv::Size(21, 21), 3);
-
+        cv::calcOpticalFlowPyrLK(ref_frame, img, feats_, feats_curr, status, err);
+        
         std::vector<cv::Point2f> points, points_curr;
         std::vector<cv::Point3f> point3ds;
         for(uint i = 0; i < status.size(); i++) {
@@ -70,7 +80,7 @@ private:
         }
         
         remove_outliers(points, points_curr, point3ds);
-
+        
         cv::Mat rvec, tvec;
         std::vector<uchar> inliers;
         cv::Mat dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
@@ -79,7 +89,7 @@ private:
         {
             update_odom(rvec, tvec);
         }
-
+        
         if(visulization)
         {
             cv::Mat feats_img;
@@ -90,7 +100,7 @@ private:
             }
             cv::imshow("feats", feats_img);
         }
-
+        
         return std::count(inliers.begin(), inliers.end(), 1);
     }
 
@@ -103,7 +113,7 @@ private:
         // cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create(thresh);
         detector->detect(left_img, left_keypoints);
-
+        
         static auto cmp = [](const cv::KeyPoint& a, const cv::KeyPoint& b) -> bool { return a.response > b.response; };
         std::sort(left_keypoints.begin(), left_keypoints.end(), cmp);
 
@@ -114,11 +124,9 @@ private:
             left_feats.push_back(left_keypoints[i].pt);
             // cv::circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
         }
-
         std::vector<uchar> status;
         std::vector<float> err;
-        cv::calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats, status, err, cv::Size(21, 21), 3);
-
+        cv::calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats, status, err);
         uint track_cnt = std::count(status.begin(), status.end(), 1);
         feat3ds_.resize(track_cnt);
         feats_.resize(track_cnt);
@@ -153,7 +161,7 @@ private:
         }
 
         remove_outliers(feats_, feats_tracked, feat3ds_);
-
+        
         ///////////////////////////////update//////////////////////////////////
         left_img.copyTo(ref_frame_);
 

@@ -37,4 +37,6 @@ std::string get_curr_time();
 
 #define LOG_TEST(...) print_base(std::cout, TT_PRINT_PURPLE, get_curr_time(), __VA_ARGS__, TT_PRINT_NONE) << std::endl
 
+#define LOG_LOCATE print_base(std::cout, CODE_INFO, TT_PRINT_NONE) << std::endl;
+
 #endif // __LOG_H__
