@@ -21,7 +21,7 @@ public:
         uint min_disparity;
         uint max_epipolar;
 
-        Option(uint max_feat_cnt = 1000, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
+        Option(uint max_feat_cnt = 500, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
                 uint min_feat_dist = 30, uint min_disparity = 2, uint max_epipolar = 5)
             : max_feat_cnt(max_feat_cnt), min_feat_cnt(min_feat_cnt), min_track_cnt(min_track_cnt), 
                 min_feat_dist(min_feat_dist), min_disparity(min_disparity), max_epipolar(max_epipolar) {}
@@ -100,7 +100,7 @@ private:
         std::vector<cv::Point2f> left_feats, right_feats;
 
         int thresh = 10;
-        cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
+        // cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create(thresh);
         detector->detect(left_img, left_keypoints);
 
@@ -109,10 +109,10 @@ private:
 
         for(uint i = 0; i < left_keypoints.size(); i++) {
             if(left_feats.size() >= option_.max_feat_cnt) continue;
-            if(!mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x)) continue;
+            // if(!mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x)) continue;
 
             left_feats.push_back(left_keypoints[i].pt);
-            cv::circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
+            // cv::circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
         }
 
         std::vector<uchar> status;
