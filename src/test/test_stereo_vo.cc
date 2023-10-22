@@ -7,6 +7,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/viz.hpp>
 
+#include <fstream>
+#include <iostream>
+
 
 static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 1>& camera_info)
 {
@@ -31,6 +34,8 @@ TEST(stereo_vo, test)
     std::vector<ReadKittiDataset::ImageData> image_data = read_kitti_dataset.get_image_data();
     LOG_TEST("image_data size: ", image_data.size());
 
+    std::ofstream kitti_ofs("../log/vo_"+sequence_num+".txt", std::ios::out);
+
     StereoVO stereo(camera_matrix(camera_info));
     for(uint i = 0; i < image_data.size(); ++i)
     {
@@ -41,10 +46,9 @@ TEST(stereo_vo, test)
         stereo.update(left_img, right_img, false);
 
         Eigen::Matrix4d T = stereo.get_T();
-        LOG_TO_FILE("../log/vo_"+sequence_num+".txt", 
-                    T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
-                    T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
-                    T(2, 0), " ", T(2, 1), " ", T(2, 2), " ", T(2, 3));
+        LOG_FILE(kitti_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
+                            T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
+                            T(2, 0), " ", T(2, 1), " ", T(2, 2), " ", T(2, 3));
 
         // LOG_TEST("vo: ", stereo.get_q().coeffs().transpose(), " ", stereo.get_t().transpose());
         // LOG_TEST("gt: ", read_kitti_dataset.get_ground_truth_q(i).coeffs().transpose(), 

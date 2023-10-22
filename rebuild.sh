@@ -5,7 +5,6 @@ fi
 
 cd build && cmake .. && make -j6
 
-rm /root/work_space/tests/my_own_vo/log/vo.txt
 ./all_tests
 
 cd ..
