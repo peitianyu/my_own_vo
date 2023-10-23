@@ -7,7 +7,9 @@
 #include <Eigen/Geometry>
 #include <vector>
 #include <algorithm>
+#include <memory>
 
+#include "core/tt_tictoc.h"
 
 class StereoVO
 {
@@ -21,7 +23,7 @@ public:
         uint min_disparity;
         uint max_epipolar;
 
-        Option(uint max_feat_cnt = 1000, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
+        Option(uint max_feat_cnt = 500, uint min_feat_cnt = 50, uint min_track_cnt = 500, 
                 uint min_feat_dist = 30, uint min_disparity = 2, uint max_epipolar = 5)
             : max_feat_cnt(max_feat_cnt), min_feat_cnt(min_feat_cnt), min_track_cnt(min_track_cnt), 
                 min_feat_dist(min_feat_dist), min_disparity(min_disparity), max_epipolar(max_epipolar) {}
@@ -40,11 +42,14 @@ public:
 
     void update(cv::Mat& left_img, cv::Mat& right_img, bool visulization = false)
     {
+        TicTocAuto t("\n--update");
+
+        TicToc tictoc;
         if (feat3ds_.empty() || feats_.empty()) {
             stereo_detect(left_img, right_img);
         } else  {
-            uint feat_cnt = stereo_track(ref_frame_, left_img, visulization);
-            if (feat_cnt < option_.min_feat_cnt) stereo_detect(left_img, right_img); 
+            if (stereo_track(ref_frame_, left_img, visulization) < option_.min_feat_cnt) 
+                stereo_detect(left_img, right_img); 
         }
     }
 
@@ -54,10 +59,16 @@ public:
 private:
     uint stereo_track(cv::Mat &ref_frame, cv::Mat &img, bool visulization)
     {
+        TicTocAuto t("--stereo_track");
+
+        TicToc tictoc;
         std::vector<uchar> status;
         std::vector<float> err;
         std::vector<cv::Point2f> feats_curr;
-        cv::calcOpticalFlowPyrLK(ref_frame, img, feats_, feats_curr, status, err, cv::Size(21, 21), 3);
+        cv::calcOpticalFlowPyrLK(ref_frame, img, feats_, feats_curr, status, err);
+
+        std::cout << "\noptical flow cost: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+        tictoc.Tic();
 
         std::vector<cv::Point2f> points, points_curr;
         std::vector<cv::Point3f> point3ds;
@@ -70,15 +81,19 @@ private:
         }
         
         remove_outliers(points, points_curr, point3ds);
+        std::cout << "remove_outliers: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+        tictoc.Tic();
 
         cv::Mat rvec, tvec;
         std::vector<uchar> inliers;
         cv::Mat dist_coeffs = cv::Mat::zeros(5, 1, CV_64F);
         if(cv::solvePnPRansac(point3ds, points_curr, camera_matrix_, dist_coeffs, 
-            rvec, tvec, false, 30, 6.0, 0.99, inliers, cv::SOLVEPNP_ITERATIVE))
+            rvec, tvec, false, 30, 4.0, 0.99, inliers, cv::SOLVEPNP_ITERATIVE))
         {
             update_odom(rvec, tvec);
         }
+
+        std::cout << "solvePnPRansac: " << tictoc.Toc() * 1000 << " ms" << std::endl;
 
         if(visulization)
         {
@@ -96,34 +111,57 @@ private:
 
     void stereo_detect(const cv::Mat& left_img, const cv::Mat& right_img)
     {
-        std::vector<cv::KeyPoint> left_keypoints;
-        std::vector<cv::Point2f> left_feats, right_feats;
+        std::cout << "--------------------------------------------------------------------" << std::endl;
+        TicTocAuto t("--stereo_detect");
+
+        TicToc tictoc;
 
         int thresh = 10;
         cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create(thresh);
+        std::vector<cv::KeyPoint> left_keypoints;
         detector->detect(left_img, left_keypoints);
 
         static auto cmp = [](const cv::KeyPoint& a, const cv::KeyPoint& b) -> bool { return a.response > b.response; };
         std::sort(left_keypoints.begin(), left_keypoints.end(), cmp);
-
+        std::vector<cv::Point2f> left_feats, right_feats;
         for(uint i = 0; i < left_keypoints.size(); i++) {
-            if(left_feats.size() >= option_.max_feat_cnt) continue;
-            if(!mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x)) continue;
-
+            if(left_feats.size() >= option_.max_feat_cnt) break; 
+            
             left_feats.push_back(left_keypoints[i].pt);
-            cv::circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
         }
 
+        std::cout << "detect cost: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+        tictoc.Tic();
+        
         std::vector<uchar> status;
         std::vector<float> err;
-        cv::calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats, status, err, cv::Size(21, 21), 3);
+        cv::calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats, status, err);
 
+        std::cout << "optical flow cost: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+        tictoc.Tic();
+
+        std::vector<cv::Point2f> feats_tracked;
+        to_point_cloud(status, left_feats, right_feats, feats_tracked);
+
+        // std::cout << "to points cloud cost: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+        // tictoc.Tic();
+
+        remove_outliers(feats_, feats_tracked, feat3ds_);
+
+        std::cout << "remove_outliers cost: " << tictoc.Toc() * 1000 << " ms" << std::endl;
+
+        ///////////////////////////////update ref_frame//////////////////////////////////
+        left_img.copyTo(ref_frame_);
+    }
+
+    void to_point_cloud(const std::vector<uchar>& status, const std::vector<cv::Point2f> &left_feats, 
+                        const std::vector<cv::Point2f> &right_feats, std::vector<cv::Point2f>& feats_tracked)
+    {
         uint track_cnt = std::count(status.begin(), status.end(), 1);
         feat3ds_.resize(track_cnt);
         feats_.resize(track_cnt);
-
-        std::vector<cv::Point2f> feats_tracked(track_cnt);
+        feats_tracked.resize(track_cnt);
 
         double cx = camera_matrix_.at<double>(0, 2);
         double cy = camera_matrix_.at<double>(1, 2);
@@ -151,13 +189,6 @@ private:
 
             j++;
         }
-
-        remove_outliers(feats_, feats_tracked, feat3ds_);
-
-        ///////////////////////////////update//////////////////////////////////
-        left_img.copyTo(ref_frame_);
-
-        // std::cout << "pose: " << q_.coeffs().transpose() << " " << t_.transpose() << std::endl;
     }
 
     void remove_outliers(std::vector<cv::Point2f> &feats_prev, std::vector<cv::Point2f> &feats_curr, std::vector<cv::Point3f>& feat3ds)
@@ -165,19 +196,20 @@ private:
         std::vector<uchar> status;
         cv::findFundamentalMat(feats_prev, feats_curr, cv::FM_RANSAC, 1.0, 0.99, status);
 
-        std::vector<cv::Point2f> f_prev, f_curr; 
-        std::vector<cv::Point3f> f3ds;
+        uint j = 0;
         for(uint i = 0; i < status.size(); i++) {
             if(!status[i]) continue;
 
-            f_prev.push_back(feats_prev[i]);
-            f_curr.push_back(feats_curr[i]);
-            f3ds.push_back(feat3ds[i]);
+            feats_prev[j] = feats_prev[i];
+            feats_curr[j] = feats_curr[i];
+            feat3ds[j] = feat3ds[i];
+
+            j++;
         }
 
-        feats_prev = f_prev;
-        feats_curr = f_curr;
-        feat3ds = f3ds;
+        feats_prev.resize(j);
+        feats_curr.resize(j);
+        feat3ds.resize(j);
     }
 
     void update_odom(const cv::Mat& rvec, const cv::Mat& tvec)

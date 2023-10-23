@@ -17,7 +17,7 @@ static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 
     return camera_matrix;
 }
 
-JUST_RUN_TEST(stereo_vo, test)
+// JUST_RUN_TEST(stereo_vo, test)
 TEST(stereo_vo, test)
 {
     IniParse ini_parser("../config/config.ini");
@@ -35,39 +35,47 @@ TEST(stereo_vo, test)
     for(uint i = 0; i < image_data.size(); i++) {
         cv::Mat left_img = cv::imread(image_data[i].left_img, cv::IMREAD_GRAYSCALE);
         cv::Mat right_img = cv::imread(image_data[i].right_img, cv::IMREAD_GRAYSCALE);
-        stereo.update(left_img, right_img, true);
+        stereo.update(left_img, right_img, false);
+
+        // LOG_TEST("time: ", image_data[i].timestamp);
 
         // LOG_TEST("vo: ", stereo.get_q().coeffs().transpose(), " ", stereo.get_t().transpose());
         // LOG_TEST("gt: ", read_kitti_dataset.get_ground_truth_q(i).coeffs().transpose(), 
         //          " ", read_kitti_dataset.get_ground_truth_t(i).transpose());
 
-        {
-            // 可视化轨迹与点云
-            static cv::viz::Viz3d viz("Visual Odometry");
-            viz.setBackgroundColor(cv::viz::Color::white());
-            Eigen::Vector3d vo_t = stereo.get_t();
-            Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
-            std::vector<cv::Point3f> point_cloud = stereo.get_feat3ds();
+        // // 计算角度差
+        // Eigen::Quaterniond q_diff = stereo.get_q()*read_kitti_dataset.get_ground_truth_q(i).inverse();
+        // q_diff.normalize();
+        // 并转换为欧拉角
+        // Eigen::Vector3d euler_angle = q_diff.toRotationMatrix().eulerAngles(2, 1, 0);
+        // LOG_TEST(euler_angle.transpose());
+        // {
+        //     // 可视化轨迹与点云
+        //     static cv::viz::Viz3d viz("Visual Odometry");
+        //     viz.setBackgroundColor(cv::viz::Color::white());
+        //     Eigen::Vector3d vo_t = stereo.get_t();
+        //     Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
+        //     std::vector<cv::Point3f> point_cloud = stereo.get_feat3ds();
 
-            for(auto& p : point_cloud) {
-                Eigen::Vector3d p_eigen(p.x, p.y, p.z);
-                p_eigen = stereo.get_q().toRotationMatrix()*p_eigen + stereo.get_t();
-                p = cv::Point3f(p_eigen(0), p_eigen(1), p_eigen(2));
-            }
+        //     for(auto& p : point_cloud) {
+        //         Eigen::Vector3d p_eigen(p.x, p.y, p.z);
+        //         p_eigen = stereo.get_q().toRotationMatrix()*p_eigen + stereo.get_t();
+        //         p = cv::Point3f(p_eigen(0), p_eigen(1), p_eigen(2));
+        //     }
 
-            static std::vector<cv::Point3f> vo_traj, gt_traj;
-            vo_traj.emplace_back(vo_t(0), vo_t(1), vo_t(2));
-            gt_traj.emplace_back(gt_t(0), gt_t(1), gt_t(2));
+        //     static std::vector<cv::Point3f> vo_traj, gt_traj;
+        //     vo_traj.emplace_back(vo_t(0), vo_t(1), vo_t(2));
+        //     gt_traj.emplace_back(gt_t(0), gt_t(1), gt_t(2));
 
-            cv::viz::WCloud cloud_widget(point_cloud, cv::viz::Color::red());
-            viz.showWidget("cloud", cloud_widget);
-            cv::viz::WCloud vo_traj_widget(vo_traj, cv::viz::Color::green());
-            viz.showWidget("traj", vo_traj_widget);
-            cv::viz::WCloud gt_traj_widget(gt_traj, cv::viz::Color::blue());
-            viz.showWidget("gt_traj", gt_traj_widget);
+        //     cv::viz::WCloud cloud_widget(point_cloud, cv::viz::Color::red());
+        //     viz.showWidget("cloud", cloud_widget);
+        //     cv::viz::WCloud vo_traj_widget(vo_traj, cv::viz::Color::green());
+        //     viz.showWidget("traj", vo_traj_widget);
+        //     cv::viz::WCloud gt_traj_widget(gt_traj, cv::viz::Color::blue());
+        //     viz.showWidget("gt_traj", gt_traj_widget);
             
-            viz.spinOnce(1, false);
-        }
+        //     viz.spinOnce(1, false);
+        // }
         // cv::waitKey(0);
     }
 }
