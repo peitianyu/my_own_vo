@@ -7,6 +7,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/viz.hpp>
 
+#include <fstream>
+#include <iostream>
+
 
 static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 1>& camera_info)
 {
@@ -17,7 +20,7 @@ static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 
     return camera_matrix;
 }
 
-// JUST_RUN_TEST(stereo_vo, test)
+JUST_RUN_TEST(stereo_vo, test)
 TEST(stereo_vo, test)
 {
     IniParse ini_parser("../config/config.ini");
@@ -31,28 +34,47 @@ TEST(stereo_vo, test)
     std::vector<ReadKittiDataset::ImageData> image_data = read_kitti_dataset.get_image_data();
     LOG_TEST("image_data size: ", image_data.size());
 
+    std::ofstream vo_ofs("../log/vo_"+sequence_num+".txt", std::ios::out);
+    std::ofstream gt_ofs("../log/gt_"+sequence_num+".txt", std::ios::out);
+
     StereoVO stereo(camera_matrix(camera_info));
-    for(uint i = 0; i < image_data.size(); i++) {
+    for(uint i = 0; i < image_data.size(); ++i)
+    {
         cv::Mat left_img = cv::imread(image_data[i].left_img, cv::IMREAD_GRAYSCALE);
         cv::Mat right_img = cv::imread(image_data[i].right_img, cv::IMREAD_GRAYSCALE);
         stereo.update(left_img, right_img, false);
 
-        // LOG_TEST("time: ", image_data[i].timestamp);
+        Eigen::Matrix4d T = stereo.get_T();
+        LOG_FILE(vo_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
+                            T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
+                            T(2, 0), " ", T(2, 1), " ", T(2, 2), " ", T(2, 3));
 
-        // LOG_TEST("vo: ", stereo.get_q().coeffs().transpose(), " ", stereo.get_t().transpose());
+        LOG_TEST("seq: ", i, " vo: ", stereo.get_q().coeffs().transpose(), " ", stereo.get_t().transpose());
+        
+        {
+            Eigen::Quaterniond gt_q = read_kitti_dataset.get_ground_truth_q(i);
+            Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
+            T = Eigen::Matrix4d::Identity();
+            T.block<3, 3>(0, 0) = gt_q.toRotationMatrix();
+            T.block<3, 1>(0, 3) = gt_t;
+
+            LOG_FILE(gt_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
+                                T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
+                                T(2, 0), " ", T(2, 1), " ", T(2, 2), " ", T(2, 3));
+        }
+
         // LOG_TEST("gt: ", read_kitti_dataset.get_ground_truth_q(i).coeffs().transpose(), 
         //          " ", read_kitti_dataset.get_ground_truth_t(i).transpose());
 
         // // 计算角度差
         // Eigen::Quaterniond q_diff = stereo.get_q()*read_kitti_dataset.get_ground_truth_q(i).inverse();
         // q_diff.normalize();
-        // 并转换为欧拉角
         // Eigen::Vector3d euler_angle = q_diff.toRotationMatrix().eulerAngles(2, 1, 0);
         // LOG_TEST(euler_angle.transpose());
-        // {
-        //     // 可视化轨迹与点云
-        //     static cv::viz::Viz3d viz("Visual Odometry");
-        //     viz.setBackgroundColor(cv::viz::Color::white());
+
+        // Eigen::Vector3d vo_t = stereo.get_t();
+        // Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
+        // std::vector<cv::Point3f> point_cloud = stereo.get_feat3ds();
         //     Eigen::Vector3d vo_t = stereo.get_t();
         //     Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
         //     std::vector<cv::Point3f> point_cloud = stereo.get_feat3ds();
