@@ -44,14 +44,15 @@ TEST(stereo_vo, test)
         cv::Mat right_img = cv::imread(image_data[i].right_img, cv::IMREAD_GRAYSCALE);
         stereo.update(left_img, right_img, false);
 
-        Eigen::Matrix4d T = stereo.get_T();
-        LOG_FILE(vo_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
+        // Eigen::Vector3d euler_angle = stereo.get_q().toRotationMatrix().eulerAngles(2, 1, 0);
+        LOG_TEST("seq: ", i, stereo.get_t().transpose());
+        
+        {
+            Eigen::Matrix4d T = stereo.get_T();
+            LOG_FILE(vo_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
                             T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
                             T(2, 0), " ", T(2, 1), " ", T(2, 2), " ", T(2, 3));
 
-        LOG_TEST("seq: ", i, " vo: ", stereo.get_q().coeffs().transpose(), " ", stereo.get_t().transpose());
-        
-        {
             Eigen::Quaterniond gt_q = read_kitti_dataset.get_ground_truth_q(i);
             Eigen::Vector3d gt_t = read_kitti_dataset.get_ground_truth_t(i);
             T = Eigen::Matrix4d::Identity();

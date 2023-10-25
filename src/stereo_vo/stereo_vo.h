@@ -12,7 +12,6 @@
 #include "core/tt_tictoc.h"
 #include "core/tt_log.h"
 
-
 class StereoVO
 {
 public:
