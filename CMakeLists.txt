@@ -8,13 +8,24 @@ project(all_tests)
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(CMAKE_C_COMPILER "gcc")
 SET(CMAKE_CXX_COMPILER "g++")
-# 执行路径设置
-# SET(EXECUTABLE_OUTPUT_PATH ../bin)
+
 # 设置编译选项
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -std=c++14 -fPIC -g -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -Wall -std=c++14 -fPIC -pthread")
+SET(CMAKE_BUILD_TYPE Release)
 
 # 运行测试
 add_definitions(-DTEST_ENABLE)
+
+# 开启图优化打印与断言
+option(ENABLE_LOGGING "Enable logging." ON )
+if(ENABLE_LOGGING)
+add_definitions(-DGRAPH_ENABLE_LOG)
+endif()
+
+option(ENABLE_ASSERTIONS "Enable assertions." ON )
+if(ENABLE_ASSERTIONS)
+add_definitions(-DGRAPH_ENABLE_ASSERT)
+endif()
 
 # 添加eigen库
 find_package(Eigen3 REQUIRED)

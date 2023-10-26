@@ -27,7 +27,7 @@ public:
     virtual Eigen::VectorXd Error() const = 0;
 
     // Returns e1 - e2.
-    virtual Eigen::VectorXd SubtractError(const Eigen::VectorXd &e1, const Eigen::VectorXd &e2) const = 0;
+    virtual Eigen::VectorXd SubtractError(const Eigen::VectorXd &e1, const Eigen::VectorXd &e2) const { return e1 - e2; }
 
     // Jacobian wrt to the variable at idx. Defaults
     // to computing the jacobian numerically.

@@ -20,7 +20,7 @@ static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 
     return camera_matrix;
 }
 
-JUST_RUN_TEST(stereo_vo, test)
+// JUST_RUN_TEST(stereo_vo, test)
 TEST(stereo_vo, test)
 {
     IniParse ini_parser("../config/config.ini");
