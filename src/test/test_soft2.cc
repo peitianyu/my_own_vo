@@ -20,7 +20,7 @@ static Eigen::Matrix<double, 3, 4> camera_matrix(const Eigen::Matrix<double, 5, 
     return camera_matrix;
 }
 
-JUST_RUN_TEST(soft2, test)
+// JUST_RUN_TEST(soft2, test)
 TEST(soft2, test)
 {
     IniParse ini_parser("../config/config.ini");
@@ -38,15 +38,13 @@ TEST(soft2, test)
     std::ofstream gt_ofs("../log/gt_"+sequence_num+".txt", std::ios::out);
 
     Soft2 soft2(camera_matrix(camera_info));
-    for(uint i = 0; i < 2; ++i)
+    for(uint i = 0; i < 20; ++i)
     // for(uint i = 0; i < image_data.size(); ++i)
     {
         std::cout << "-----------------------------------------------------------" << std::endl;
         cv::Mat left_img = cv::imread(image_data[i].left_img, cv::IMREAD_GRAYSCALE);
         cv::Mat right_img = cv::imread(image_data[i].right_img, cv::IMREAD_GRAYSCALE);
         soft2.update(left_img, right_img, false);
-
-        
     }
 }
 

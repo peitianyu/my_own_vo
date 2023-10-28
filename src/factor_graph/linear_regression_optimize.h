@@ -30,11 +30,6 @@ public:
 
     virtual int Dim() const override { return 1;}
 
-    virtual Eigen::VectorXd Error() const override // 重写
-    {
-        GRAPH_ASSERT(this->NumVariables() == 1);
-        return Eigen::VectorXd::Zero(1);
-    }
 protected:
     Eigen::MatrixXd measurement_;
 };

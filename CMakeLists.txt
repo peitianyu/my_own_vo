@@ -22,10 +22,10 @@ if(ENABLE_LOGGING)
 add_definitions(-DGRAPH_ENABLE_LOG)
 endif()
 
-option(ENABLE_ASSERTIONS "Enable assertions." ON )
-if(ENABLE_ASSERTIONS)
-add_definitions(-DGRAPH_ENABLE_ASSERT)
-endif()
+# option(ENABLE_ASSERTIONS "Enable assertions." ON )
+# if(ENABLE_ASSERTIONS)
+# add_definitions(-DGRAPH_ENABLE_ASSERT)
+# endif()
 
 # 添加eigen库
 find_package(Eigen3 REQUIRED)

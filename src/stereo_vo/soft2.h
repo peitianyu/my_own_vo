@@ -33,14 +33,14 @@ public:
         uint min_disparity;
         uint max_epipolar;
 
-        Option(uint max_feat_cnt = 1000, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
+        Option(uint max_feat_cnt = 500, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
                 uint min_feat_dist = 20, uint min_disparity = 2, uint max_epipolar = 5)
             : max_feat_cnt(max_feat_cnt), min_feat_cnt(min_feat_cnt), min_track_cnt(min_track_cnt), 
                 min_feat_dist(min_feat_dist), min_disparity(min_disparity), max_epipolar(max_epipolar) {}
     };
 
     Soft2(const Eigen::Matrix<double, 3, 4>& camera_matrix, const Option& option = Option())
-        : option_(option), R_(Eigen::Matrix3d::Identity()), t_(Eigen::Vector3d::Zero()), scale_(1.0), ext_R_(Eigen::Matrix3d::Identity())
+        : option_(option), R_(Eigen::Matrix3d::Identity()), t_(Eigen::Vector3d::Zero()), scale_(1.0), ext_r_(Eigen::Vector3d::Zero())
     {
         camera_matrix_ = cv::Mat::eye(3, 3, CV_64F);
         camera_matrix_.at<double>(0, 0) = camera_matrix(0, 0);
@@ -74,7 +74,7 @@ private:
         cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         std::vector<cv::Point2f> left_feats, right_feats;
         for(uint i = 0; i < left_keypoints.size(); i++) {
-            if(left_feats.size() >= 500) break; 
+            if(left_feats.size() >= option_.max_feat_cnt) break; 
             if(!mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x)) continue;
             left_feats.push_back(left_keypoints[i].pt);
 
@@ -106,6 +106,14 @@ private:
 
         // 3. 通过右相机标定scale与外参R, 并更新R, t
         optimize(dR, dt, cur_left_frame, cur_right_frame);
+        // LOG_TEST("dR: \n", dR);
+        // LOG_TEST("dt: ", dt.transpose());
+
+        // 4. 更新里程计
+        update_odom(dR, dt);
+        // LOG_TEST("R_: \n", R_);
+        LOG_TEST("t_: ", t_.transpose());
+
 
         return 0;
     }
@@ -118,6 +126,15 @@ private:
         
         remove_outliers(prev_feats, status);
         remove_outliers(curr_feats, status);
+    }
+
+    void remove_ouliners(std::vector<cv::Point2f>& prev_feats, std::vector<cv::Point2f>& curr_feats)
+    {
+        std::vector<uchar> status;
+        cv::findFundamentalMat(curr_feats, prev_feats, cv::RANSAC, 0.999, 1.0, status);
+
+        remove_outliers(prev_feats, status);
+        remove_outliers(curr_feats, status); 
     }
 
     void update_relative_pose(std::vector<cv::Point2f>& prev_feats, std::vector<cv::Point2f>& curr_feats, Eigen::Matrix3d& R, Eigen::Vector3d& t)
@@ -154,14 +171,14 @@ private:
     {
         TicTocAuto t("optimize");
         FactorGraph graph;
-        Pt2PolarVariable *v_a = new Pt2PolarVariable(Eigen::Vector4d(0, 0, 0, 1.0)); // alpha, beta, gamma, scale
+        Pt2PolarVariable *v_a = new Pt2PolarVariable(Eigen::Vector4d(ext_r_(0), ext_r_(1), ext_r_(2), 1)); // alpha, beta, gamma, scale
         graph.AddVariable(v_a);
 
         Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
         T.block<3, 3>(0, 0) = dR;
         T.block<3, 1>(0, 3) = dt;
 
-        LOG_TEST("T: \n", T);
+        // LOG_TEST("T: \n", T);
 
         Eigen::Matrix3d K = Eigen::Matrix3d::Identity();
         K(0, 0) = camera_matrix_.at<double>(0, 0);
@@ -169,7 +186,7 @@ private:
         K(1, 2) = camera_matrix_.at<double>(1, 2);
         K(0, 2) = camera_matrix_.at<double>(0, 2);
         double base_line = 0.386145;
-        std::cout << "K: \n" << K << std::endl;
+        // std::cout << "K: \n" << K << std::endl;
     
         // curr_right -> prev_left
         std::vector<cv::Point2f> curr_right_feats;
@@ -211,19 +228,16 @@ private:
 
         v_a->Print();
 
-        // 对T修正
-        Eigen::Matrix4d T01 = Eigen::Matrix4d::Identity();
-        T01 << T(0,0), T(0,1), T(0,2), T(0,3) * v_a->scale(),
-               T(1,0), T(1,1), T(1,2), T(1,3) * v_a->scale(),
-               T(2,0), T(2,1), T(2,2), T(2,3) * v_a->scale(),
-               0, 0, 0, 1;
-        
-        std::cout << "T01: " << std::endl << T01 << std::endl;
-
-        // R_ = T01.block<3, 3>(0, 0);
-        // t_ = T01.block<3, 1>(0, 3);
+        scale_ = v_a->scale();
+        ext_r_ = v_a->x().head<3>();
     }
 
+    void update_odom(const Eigen::Matrix3d& dR, const Eigen::Vector3d& dt)
+    {
+        t_ = t_ + dR * (dt * scale_);
+        // t_ = t_ + dR * (dt * 0.858);
+        R_ = R_ * dR;
+    }
 private:
     Option option_;
     cv::Mat camera_matrix_;
@@ -233,7 +247,7 @@ private:
     Eigen::Vector3d t_;
 
     double scale_;          // 尺度
-    Eigen::Matrix3d ext_R_; // 基于有相机原点, 相对于左相机的偏差
+    Eigen::Vector3d ext_r_; // 基于有相机原点, 相对于左相机的偏差
 
     std::vector<cv::Point2f> left_prev_feats_;
     std::vector<cv::Point2f> right_prev_feats_;

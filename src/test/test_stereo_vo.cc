@@ -38,14 +38,15 @@ TEST(stereo_vo, test)
     std::ofstream gt_ofs("../log/gt_"+sequence_num+".txt", std::ios::out);
 
     StereoVO stereo(camera_matrix(camera_info));
-    for(uint i = 0; i < image_data.size(); ++i)
+    // for(uint i = 0; i < image_data.size(); ++i)
+    for(uint i = 0; i < 20; ++i)
     {
         cv::Mat left_img = cv::imread(image_data[i].left_img, cv::IMREAD_GRAYSCALE);
         cv::Mat right_img = cv::imread(image_data[i].right_img, cv::IMREAD_GRAYSCALE);
         stereo.update(left_img, right_img, false);
 
         // Eigen::Vector3d euler_angle = stereo.get_q().toRotationMatrix().eulerAngles(2, 1, 0);
-        LOG_TEST("seq: ", i, stereo.get_t().transpose());
+        // LOG_TEST("seq: ", i," ", stereo.get_t().transpose());
         
         {
             Eigen::Matrix4d T = stereo.get_T();
@@ -58,6 +59,7 @@ TEST(stereo_vo, test)
             T = Eigen::Matrix4d::Identity();
             T.block<3, 3>(0, 0) = gt_q.toRotationMatrix();
             T.block<3, 1>(0, 3) = gt_t;
+            LOG_TEST("seq: ", i," ", gt_t.transpose());
 
             LOG_FILE(gt_ofs, T(0, 0), " ", T(0, 1), " ", T(0, 2), " ", T(0, 3), " ",
                                 T(1, 0), " ", T(1, 1), " ", T(1, 2), " ", T(1, 3), " ",
