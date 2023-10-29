@@ -36,7 +36,7 @@ find_package(OpenCV REQUIRED)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 # 添加.h文件
-include_directories(src)
+include_directories(src src/lib)
 
 file(GLOB_RECURSE ALL_LIBRIRY_SRCS "src/*.c*")
 
