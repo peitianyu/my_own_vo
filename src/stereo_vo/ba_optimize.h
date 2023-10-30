@@ -48,13 +48,13 @@ public:
         double dis = x0.transpose() * E * x1;
 
         double d0 = dis / l0.head<2>().norm();
-        double d1 = dis / l1.head<2>().norm();        
+        double d1 = dis / l1.head<2>().norm();
 
         Eigen::VectorXd r(1);
         r <<  d0*d0 + d1*d1;
         return r;
     }
-private:
+    
     Eigen::Matrix3d hat(const Eigen::Vector3d& x) const
     {
         Eigen::Matrix3d x_hat;
@@ -63,6 +63,7 @@ private:
                  -x(1), x(0), 0;
         return x_hat;
     }
+    
     Eigen::Matrix4d toT(const Eigen::VectorXd& x, const double& s) const {
         GRAPH_ASSERT(x.size() == 6);
         Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
