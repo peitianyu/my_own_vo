@@ -25,7 +25,7 @@ public:
         uint max_epipolar;
 
         Option(uint max_feat_cnt = 500, uint min_feat_cnt = 50, uint min_track_cnt = 50, 
-                uint min_feat_dist = 30, uint min_disparity = 2, uint max_epipolar = 5)
+                uint min_feat_dist = 20, uint min_disparity = 2, uint max_epipolar = 5)
             : max_feat_cnt(max_feat_cnt), min_feat_cnt(min_feat_cnt), min_track_cnt(min_track_cnt), 
                 min_feat_dist(min_feat_dist), min_disparity(min_disparity), max_epipolar(max_epipolar) {}
     };
@@ -43,6 +43,7 @@ public:
 
     void update(cv::Mat& left_img, cv::Mat& right_img, bool visulization = false)
     {
+        TicTocAuto tictoc("stereo_vo");
         if (feat3ds_.empty() || feats_.empty()) {
             stereo_detect(left_img, right_img);
         } else  {
@@ -105,21 +106,44 @@ private:
 
     void stereo_detect(const cv::Mat& left_img, const cv::Mat& right_img)
     {
+        // std::cout << "left_img: " << left_img.size() << std::endl;
         int thresh = 10;
         // cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create(thresh);
         std::vector<cv::KeyPoint> left_keypoints;
         detector->detect(left_img, left_keypoints);
-        
+
         static auto cmp = [](const cv::KeyPoint& a, const cv::KeyPoint& b) -> bool { return a.response > b.response; };
         std::sort(left_keypoints.begin(), left_keypoints.end(), cmp);
-        std::vector<cv::Point2f> left_feats, right_feats;
+        cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
+
+        uint max_point_size = 300;
+        std::vector<cv::Point2f> left_feats2;
         for(uint i = 0; i < left_keypoints.size(); i++) {
-            if(left_feats.size() >= option_.max_feat_cnt) break; 
-            
-            left_feats.push_back(left_keypoints[i].pt);
+            if(left_feats2.size() < max_point_size && mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x))
+            {
+                // 在col:[300, 1000], row:[200, 375]
+                if(left_keypoints[i].pt.x < 400 || left_keypoints[i].pt.x > 700) continue;
+                if(left_keypoints[i].pt.y < 240 || left_keypoints[i].pt.y > 375) continue;
+                left_feats2.push_back(left_keypoints[i].pt);
+                circle(mask, left_keypoints[i].pt, 10, cv::Scalar(0), cv::FILLED);
+            }
         }
         
+        
+        
+        std::vector<cv::Point2f> left_feats, right_feats;
+        for(uint i = 0; i < left_keypoints.size(); i++) {
+            if (left_feats.size() < option_.max_feat_cnt && mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x))
+            {
+                left_feats.push_back(left_keypoints[i].pt);
+                circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
+            }
+        }
+
+        left_feats.insert(left_feats.end(), left_feats2.begin(), left_feats2.end());
+
+
         std::vector<uchar> status;
         std::vector<float> err;
         cv::calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats, status, err);
@@ -160,8 +184,6 @@ private:
                 p.x = (left_feats[i].x - cx) * p.z / fx;
                 p.y = (left_feats[i].y - cy) * p.z / fy;
             }
-
-            // TODO: 加上相对于左相机的旋转外参
             
             // std::cout << "p: " << p << std::endl;
             feat3ds_[j] = p;

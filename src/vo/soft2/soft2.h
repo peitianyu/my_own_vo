@@ -14,6 +14,9 @@
 #include "core/tt_log.h"
 #include "pt2polar_factor.h"
 #include "factor_graph/graph_optimize.h"
+#include "ba_factor.h" 
+#include "optimize.h"  
+#include "common/data_que.h"
 
 /*
 1. 通过左相机前后两帧对极约束求解相对R,t
@@ -48,11 +51,11 @@ public:
         camera_matrix_.at<double>(1, 1) = camera_matrix(1, 1);
         camera_matrix_.at<double>(1, 2) = camera_matrix(1, 2);
         baseline_ = fabs(camera_matrix(0, 3));
+        // optimize_ = std::make_unique<Optimize>(camera_matrix.block<3, 3>(0, 0), baseline_/1000.0);
     }
 
     void update(cv::Mat& left_img, cv::Mat& right_img, bool visulization = false)
     {
-        TicTocAuto t("update");
         if (left_prev_feats_.empty() || right_prev_feats_.empty()) {
             stereo_detect(left_img, right_img);
         } else  {
@@ -63,22 +66,35 @@ public:
 private:
     void stereo_detect(cv::Mat& left_img, cv::Mat& right_img)
     {
-        TicTocAuto t("stereo_detect");
         int thresh = 10;
         cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create(thresh);
         std::vector<cv::KeyPoint> left_keypoints;
         detector->detect(left_img, left_keypoints);
         
+        cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         static auto cmp = [](const cv::KeyPoint& a, const cv::KeyPoint& b) -> bool { return a.response > b.response; };
         std::sort(left_keypoints.begin(), left_keypoints.end(), cmp);
-        cv::Mat mask = cv::Mat(left_img.size(), CV_8UC1, cv::Scalar(255));
         std::vector<cv::Point2f> left_feats, right_feats;
         for(uint i = 0; i < left_keypoints.size(); i++) {
-            if(left_feats.size() >= option_.max_feat_cnt) break; 
-            if(!mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x)) continue;
-            left_feats.push_back(left_keypoints[i].pt);
+            if (left_feats.size() < option_.max_feat_cnt && mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x))
+            {
+                left_feats.push_back(left_keypoints[i].pt);
+                circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
+            }
+        }
 
-            cv::circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
+
+        uint max_point_size = 500;
+        std::vector<cv::Point2f> left_feats2;
+        for(uint i = 0; i < left_keypoints.size(); i++) {
+            if(left_feats2.size() < max_point_size && mask.at<unsigned char>(left_keypoints[i].pt.y, left_keypoints[i].pt.x))
+            {
+                // 在col:[300, 1000], row:[200, 375]
+                if(left_keypoints[i].pt.x < 400 || left_keypoints[i].pt.x > 700) continue;
+                if(left_keypoints[i].pt.y < 240 || left_keypoints[i].pt.y > 375) continue;
+                left_feats2.push_back(left_keypoints[i].pt);
+                circle(mask, left_keypoints[i].pt, option_.min_feat_dist, cv::Scalar(0), cv::FILLED);
+            }
         }
         
         calcOpticalFlowPyrLK(left_img, right_img, left_feats, right_feats);
@@ -92,28 +108,23 @@ private:
 
     uint stereo_track(cv::Mat& cur_left_frame, cv::Mat& cur_right_frame, bool visulization = false)
     {
-        TicTocAuto t("stereo_track");
-        // 1. 跟踪特征
         std::vector<cv::Point2f> left_curr_feats;
         calcOpticalFlowPyrLK(prev_left_frame_, cur_left_frame, left_prev_feats_, left_curr_feats);
 
-        // 2. 通过左相机前后两帧对极约束求解相对R,t
         Eigen::Matrix3d dR = Eigen::Matrix3d::Zero();
         Eigen::Vector3d dt = Eigen::Vector3d::Zero();
         update_relative_pose(left_prev_feats_, left_curr_feats, dR, dt);
-        // LOG_TEST("dR: \n", dR);
-        // LOG_TEST("dt: ", dt.transpose());
 
-        // 3. 通过右相机标定scale与外参R, 并更新R, t
         optimize(dR, dt, cur_left_frame, cur_right_frame);
-        // LOG_TEST("dR: \n", dR);
-        // LOG_TEST("dt: ", dt.transpose());
 
-        // 4. 更新里程计
         update_odom(dR, dt);
+
+        Eigen::Matrix4d T = Eigen::Matrix4d::Identity();
+        T.block<3, 3>(0, 0) = R_;
+        T.block<3, 1>(0, 3) = t_;
+        ba_optimize(cur_left_frame, left_curr_feats, T);
         // LOG_TEST("R_: \n", R_);
         LOG_TEST("t_: ", t_.transpose());
-
 
         return 0;
     }
@@ -165,6 +176,94 @@ private:
         }
 
         feats.resize(j);
+    }
+
+    void ba_optimize(cv::Mat& cur_left_frame, const std::vector<cv::Point2f>& left_feats, const Eigen::Matrix4d& T)
+    {
+        left_frame_que_.push(cur_left_frame);
+        left_feats_que_.push(left_feats);
+        T_que_.push(T);
+        scale_que_.push(scale_);
+
+        if(left_frame_que_.size() < 4) return;
+
+        Eigen::Matrix4d T12 = T_que_[0].inverse() * T_que_[1];
+        Eigen::Matrix4d T23 = T_que_[1].inverse() * T_que_[2];
+        Eigen::Matrix4d T34 = T_que_[2].inverse() * T_que_[3];
+        double scale23 = scale_que_[2] / scale_que_[0];
+        double scale34 = scale_que_[3] / scale_que_[0];
+
+        Eigen::VectorXd x(20);
+        x << Matrix2Vector(T12), Matrix2Vector(T23), Matrix2Vector(T34), scale23, scale34;
+        LinearRegressionVariable *v_a = new LinearRegressionVariable(x);
+
+        FactorGraph graph;
+        graph.AddVariable(v_a);
+
+        // BaFactor(LinearRegressionVariable *v_a, const Eigen::VectorXd& measurement, const Eigen::Matrix3d& K, const uint& mode = 0) 
+
+        Eigen::Matrix3d K = Eigen::Matrix3d::Identity();
+        K(0, 0) = camera_matrix_.at<double>(0, 0);
+        K(1, 1) = camera_matrix_.at<double>(1, 1);
+        K(1, 2) = camera_matrix_.at<double>(1, 2);
+        K(0, 2) = camera_matrix_.at<double>(0, 2);
+
+        // 1, 3
+        std::vector<cv::Point2f> feats;
+        calcOpticalFlowPyrLK(left_frame_que_[0], left_frame_que_[2], left_feats_que_[0], feats);
+        for(uint i = 0; i < left_feats_que_[0].size(); i++) {
+            Eigen::Vector3d p1 = Eigen::Vector3d(left_feats_que_[0][i].x, left_feats_que_[0][i].y, 1);
+            Eigen::Vector3d p0 = Eigen::Vector3d(feats[i].x, feats[i].y, 1);
+
+            Eigen::Matrix<double, 6, 1> measurement;
+            measurement << p0, p1;
+
+            BaFactor *f = new BaFactor(v_a, measurement, K, 0); 
+            graph.AddFactor(f);
+        }
+
+        // 2, 4
+        calcOpticalFlowPyrLK(left_frame_que_[1], left_frame_que_[3], left_feats_que_[1], feats);
+        for(uint i = 0; i < left_feats_que_[1].size(); i++) {
+            Eigen::Vector3d p1 = Eigen::Vector3d(left_feats_que_[1][i].x, left_feats_que_[1][i].y, 1);
+            Eigen::Vector3d p0 = Eigen::Vector3d(feats[i].x, feats[i].y, 1);
+
+            Eigen::Matrix<double, 6, 1> measurement;
+            measurement << p0, p1;
+
+            BaFactor *f = new BaFactor(v_a, measurement, K, 1);
+            graph.AddFactor(f);
+        }
+
+        // // 1, 4
+        // calcOpticalFlowPyrLK(left_frame_que_[0], left_frame_que_[3], left_feats_que_[0], feats);
+        // for(uint i = 0; i < left_feats_que_[0].size(); i++) {
+        //     Eigen::Vector3d p1 = Eigen::Vector3d(left_feats_que_[0][i].x, left_feats_que_[0][i].y, 1);
+        //     Eigen::Vector3d p0 = Eigen::Vector3d(feats[i].x, feats[i].y, 1);
+
+        //     Eigen::Matrix<double, 6, 1> measurement;
+        //     measurement << p0, p1;
+
+        //     BaFactor *f = new BaFactor(v_a, measurement, K, 2);
+        //     graph.AddFactor(f);
+        // }
+
+        // 优化
+        GraphOptimize::Option option = GraphOptimize::Option();
+        GraphOptimize graph_optimize = GraphOptimize(option);
+
+        graph_optimize.OptimizeGN(&graph);
+
+        Eigen::VectorXd x_opt = v_a->x();
+
+        std::cout << "x_opt: \n" << x_opt.transpose() << std::endl;
+    }
+
+    Eigen::VectorXd Matrix2Vector(const Eigen::Matrix4d& T)
+    {
+        Eigen::VectorXd x(6);
+        x << T.block<3, 3>(0, 0).eulerAngles(2, 1, 0).reverse(), T.block<3, 1>(0, 3);
+        return x;
     }
 
     void optimize(Eigen::Matrix3d& dR, Eigen::Vector3d& dt, cv::Mat& cur_left_frame, cv::Mat& cur_right_frame)
@@ -230,12 +329,14 @@ private:
 
         scale_ = v_a->scale();
         ext_r_ = v_a->x().head<3>();
+
+        // LOG_TEST("scale: ", scale_);
+        // LOG_TEST("ext_r_: \n", v_a->ext_R()); 
     }
 
     void update_odom(const Eigen::Matrix3d& dR, const Eigen::Vector3d& dt)
     {
         t_ = t_ + dR * (dt * scale_);
-        // t_ = t_ + dR * (dt * 0.858);
         R_ = R_ * dR;
     }
 private:
@@ -253,6 +354,13 @@ private:
     std::vector<cv::Point2f> right_prev_feats_;
     cv::Mat prev_left_frame_;
     cv::Mat prev_right_frame_;
+
+    DataQue<std::vector<cv::Point2f>> left_feats_que_;
+    DataQue<cv::Mat> left_frame_que_;
+    DataQue<Eigen::Matrix4d> T_que_;
+    DataQue<double> scale_que_;
+
+    std::unique_ptr<Optimize> optimize_;
 };
 
 

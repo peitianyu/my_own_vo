@@ -15,7 +15,7 @@ public:
     {
         int max_iterations = 3000;        // Maximum number of iterations.
         double relative_error_th = 1e-5; // Maximum relative error decrease.
-        double absolute_error_th = 1e-5; // Maximum absolute error decrease.
+        double absolute_error_th = 1e-4; // Maximum absolute error decrease.
     };
 
     GraphOptimize(Option option);

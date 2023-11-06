@@ -12,8 +12,8 @@ public:
     Pt2PolarVariable(const Eigen::Vector4d& x) : x_(x) {}
 
     Eigen::Matrix3d ext_R() const {
-        Eigen::Quaterniond q(1, x_(0), x_(1), x_(2));
-        return q.normalized().toRotationMatrix();
+        Eigen::Vector3d x = x_.head<3>();
+        return Eigen::AngleAxisd(x.norm(), x.normalized()).toRotationMatrix();
     }
 
     Eigen::Vector4d x() const { return x_; }
@@ -51,7 +51,7 @@ public:
         
         Eigen::Matrix4d ext_T = Eigen::Matrix4d::Identity();
         ext_T.block<3, 3>(0, 0) = v_a->ext_R();
-        ext_T.block<3, 1>(0, 3) = Eigen::Vector3d::Ones() * baseline_;
+        ext_T(0, 3) = baseline_;
         
         T01 = T01 * ext_T;
 

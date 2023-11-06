@@ -7,6 +7,7 @@
  * 优化窗口为: 4
  * 优化变量为: T12, T23, T34, s23, s34
  * 约束为:  窗口内的所有特征点
+ * mode : [0, 1, 2][13, 24, 14]
  **************************************/
 class BaFactor : public LinearRegressionFactor
 {
@@ -25,20 +26,20 @@ public:
             Eigen::Matrix4d T23 = toT(v_a->x().segment<6>(6), v_a->x()(18));
             T = T12 * T23;
         }else if(mode_ == 1){
-            Eigen::Matrix4d T23 = toT(v_a->x().segment<6>(0), v_a->x()(18));
-            Eigen::Matrix4d T34 = toT(v_a->x().segment<6>(6), v_a->x()(19));
+            Eigen::Matrix4d T23 = toT(v_a->x().segment<6>(6), v_a->x()(18));
+            Eigen::Matrix4d T34 = toT(v_a->x().segment<6>(12), v_a->x()(19));
             T = T23 * T34;
         } else if(mode_ == 2){
             Eigen::Matrix4d T12 = toT(v_a->x().segment<6>(0), 1.0);
             Eigen::Matrix4d T23 = toT(v_a->x().segment<6>(6), v_a->x()(18));
-            Eigen::Matrix4d T34 = toT(v_a->x().segment<6>(6), v_a->x()(19));
+            Eigen::Matrix4d T34 = toT(v_a->x().segment<6>(12), v_a->x()(19));
             T = T12 * T23 * T34;
         }
 
         Eigen::Matrix3d E = hat(T.block<3, 1>(0, 3)) * T.block<3, 3>(0, 0);
 
-        Eigen::Vector2d p0 = measurement_.segment<2>(0);
-        Eigen::Vector2d p1 = measurement_.segment<2>(2);
+        Eigen::Vector3d p0 = measurement_.block<3, 1>(0, 0); // curr
+        Eigen::Vector3d p1 = measurement_.block<3, 1>(3, 0); // prev
         Eigen::Vector3d x0 = K_inv_ * p0; // curr
         Eigen::Vector3d x1 = K_inv_ * p1; // prev
 

@@ -152,13 +152,27 @@ bool GraphOptimize::ContinueIteratingCheck(int iter_num, double current_error, d
         return false;
     }
 
-    const double error_decrease = current_error - new_error;
-    if ((error_decrease <= m_option.absolute_error_th) ||
-        ((error_decrease / current_error) <= m_option.relative_error_th)){
+    const double error_decrease = (current_error - new_error);
+    if((error_decrease <= m_option.absolute_error_th)){
         GRAPH_LOG("Converged.");
         *converged = true;
         return false;
     }
+
+    if((error_decrease / current_error) <= m_option.relative_error_th){
+        GRAPH_LOG("Converged.");
+        *converged = true;
+        return false;
+    }
+
+    std::cout << "error_decrease: " << error_decrease << " " << current_error << " " << new_error << std::endl;
+    static double last_error = std::abs(error_decrease);
+    if (last_error < error_decrease){
+        GRAPH_LOG("Error increased.");
+        *converged = false;
+        return false;
+    }
+    last_error = error_decrease;
 
     return true;
 }
