@@ -1,0 +1,37 @@
+1. 通过双目实现pnp优化
+2. 标定旋转外参与base_line
+3. 根据极线绘制mask, 进行采样
+4. 
+
+
+calib_factor
+{
+    Eigen::Vector4d X: base_line ext_rot
+}
+
+inline Eigen::Vector2d project3Dto2D ( float x, float y, float z, float fx, float fy, float cx, float cy )
+{
+    float u = fx*x/z+cx;
+    float v = fy*y/z+cy;
+    return Eigen::Vector2d ( u,v );
+}
+
+
+inline Eigen::Vector3d project2Dto3D ( float u, float v, float fx, float fy, float cx, float cy, float baseline, float dx )
+{
+    float z = baseline * fx / dx;
+    float x = (u-cx)*z/fx;
+    float y = (v-cy)*z/fy;
+    return Eigen::Vector3d ( x,y,z );
+}
+
+inline Eigen::Vector3d TransformPoint3d (Eigen::Matrxi3d R, double base_line, Eigen::Vector3d point)
+{
+    return  R * point - base_line;
+}
+
+Eigen::Matrix3d ext_R = Eigen::Matrix3d::Identity();
+            ext_R << 0.877514, -0.148337, 0.456032,
+                     0.145212, 0.988504, 0.042115,
+                     -0.457037, 0.0292649, 0.888966;
+
