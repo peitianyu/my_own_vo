@@ -1,0 +1,8 @@
+prefix=/root/ws/catkin_ws/devel
+
+Name: undistortion_scan
+Description: Description of undistortion_scan
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,530 @@
+[  0%] Built target topic_tools_generate_messages_eus
+[  0%] Built target dynamic_reconfigure_generate_messages_lisp
+[  0%] Built target topic_tools_generate_messages_cpp
+[  0%] Built target std_srvs_generate_messages_lisp
+[  0%] Built target topic_tools_generate_messages_nodejs
+[  0%] Built target std_srvs_generate_messages_eus
+[  0%] Built target topic_tools_generate_messages_lisp
+[  0%] Built target std_srvs_generate_messages_cpp
+[  0%] Built target bond_generate_messages_nodejs
+[  0%] Built target nodelet_generate_messages_nodejs
+[  0%] Built target bond_generate_messages_py
+[  0%] Built target nodelet_generate_messages_py
+[  0%] Built target bond_generate_messages_eus
+[  0%] Built target std_srvs_generate_messages_nodejs
+[  0%] Built target bond_generate_messages_lisp
+[  0%] Built target nodelet_generate_messages_eus
+[  0%] Built target actionlib_generate_messages_cpp
+[  0%] Built target rosgraph_msgs_generate_messages_nodejs
+[  0%] Built target actionlib_msgs_generate_messages_py
+[  0%] Built target topic_tools_generate_messages_py
+[  0%] Built target roscpp_generate_messages_py
+[  0%] Built target sensor_msgs_generate_messages_cpp
+[  0%] Built target roscpp_generate_messages_cpp
+[  0%] Built target roscpp_generate_messages_eus
+[  0%] Built target std_msgs_generate_messages_py
+[  0%] Built target pcl_msgs_generate_messages_cpp
+[  0%] Built target nodelet_generate_messages_lisp
+[  0%] Built target geometry_msgs_generate_messages_eus
+[  0%] Built target std_msgs_generate_messages_nodejs
+[  0%] Built target tf_generate_messages_cpp
+[  0%] Built target geometry_msgs_generate_messages_lisp
+[  0%] Built target tf_generate_messages_nodejs
+[  0%] Built target std_msgs_generate_messages_lisp
+[  0%] Built target actionlib_msgs_generate_messages_eus
+[  0%] Built target std_srvs_generate_messages_py
+[  0%] Built target dynamic_reconfigure_generate_messages_py
+[  0%] Built target pcl_ros_gencfg
+[  0%] Built target rosgraph_msgs_generate_messages_lisp
+[  0%] Built target rosgraph_msgs_generate_messages_eus
+[  0%] Built target tf_generate_messages_eus
+[  0%] Built target std_msgs_generate_messages_cpp
+[  0%] Built target sensor_msgs_generate_messages_nodejs
+[  0%] Built target sensor_msgs_generate_messages_lisp
+[  0%] Built target nodelet_topic_tools_gencfg
+[  0%] Built target geometry_msgs_generate_messages_py
+[  0%] Built target sensor_msgs_generate_messages_eus
+[  0%] Built target tf2_msgs_generate_messages_eus
+[  0%] Built target sensor_msgs_generate_messages_py
+[  0%] Built target roscpp_generate_messages_lisp
+[  0%] Built target rosgraph_msgs_generate_messages_py
+[  0%] Built target _catkin_empty_exported_target
+[  0%] Built target actionlib_generate_messages_lisp
+[  0%] Built target tf_generate_messages_lisp
+[  0%] Built target geometry_msgs_generate_messages_cpp
+[  0%] Built target dynamic_reconfigure_generate_messages_cpp
+[  0%] Built target bond_generate_messages_cpp
+[  0%] Built target dynamic_reconfigure_generate_messages_nodejs
+[  0%] Built target tf2_msgs_generate_messages_py
+[  0%] Built target actionlib_msgs_generate_messages_cpp
+[  0%] Built target actionlib_generate_messages_nodejs
+[  0%] Built target roscpp_generate_messages_nodejs
+[  0%] Built target rosgraph_msgs_generate_messages_cpp
+[  0%] Built target actionlib_generate_messages_eus
+[  0%] Built target actionlib_generate_messages_py
+[  0%] Built target std_msgs_generate_messages_eus
+[  0%] Built target tf_generate_messages_py
+[  0%] Built target actionlib_msgs_generate_messages_nodejs
+[  0%] Built target tf2_msgs_generate_messages_lisp
+[  0%] Built target actionlib_msgs_generate_messages_lisp
+[  0%] Built target pcl_msgs_generate_messages_eus
+[  0%] Built target tf2_msgs_generate_messages_nodejs
+[  0%] Built target pcl_msgs_generate_messages_nodejs
+[  0%] Built target pcl_msgs_generate_messages_lisp
+[  0%] Built target pcl_msgs_generate_messages_py
+[  0%] Built target dynamic_reconfigure_generate_messages_eus
+[  0%] Built target geometry_msgs_generate_messages_nodejs
+[  0%] Built target nodelet_generate_messages_cpp
+[  0%] Built target dynamic_reconfigure_gencfg
+[  0%] Built target tf2_msgs_generate_messages_cpp
+Scanning dependencies of target undistortion_scan
+[ 25%] Built target lesson2_scan_to_pointclod2_converter_node
+[ 37%] Building CXX object undistortion_scan/CMakeFiles/undistortion_scan.dir/src/undistortion_scan.cc.o
+[ 62%] Built target lesson2_scan_match_icp_node
+[ 75%] Linking CXX executable /root/ws/catkin_ws/devel/lib/undistortion_scan/undistortion_scan
+[100%] Built target undistortion_scan
+Base path: /root/ws/catkin_ws
+Source space: /root/ws/catkin_ws/src
+Build space: /root/ws/catkin_ws/build
+Devel space: /root/ws/catkin_ws/devel
+Install space: /root/ws/catkin_ws/install
+####
+#### Running command: "make cmake_check_build_system" in "/root/ws/catkin_ws/build"
+####
+####
+#### Running command: "make -j8 -l8" in "/root/ws/catkin_ws/build"
+####
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 498
+points.size(): 20
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 498
+points.size(): 21
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 494
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 493
+points.size(): 20
+points.size(): 494
+points.size(): 20
+points.size(): 493
+points.size(): 20
+points.size(): 496
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 498
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 497
+points.size(): 20
+points.size(): 495
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 493
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 499
+points.size(): 495
+points.size(): 20
+points.size(): 20
+points.size(): 494
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 496
+points.size(): 492
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 496
+points.size(): 498
+points.size(): 20
+points.size(): 20
+points.size(): 496
+points.size(): 498
+points.size(): 498
+points.size(): 492
+points.size(): 500
+points.size(): 495
+points.size(): 498
+points.size(): 499
+points.size(): 497
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 496
+points.size(): 490
+points.size(): 496
+points.size(): 494
+points.size(): 493
+points.size(): 498
+points.size(): 490
+points.size(): 496
+points.size(): 498
+points.size(): 20
+points.size(): 497
+points.size(): 495
+points.size(): 497
+points.size(): 493
+points.size(): 496
+points.size(): 496
+points.size(): 500
+points.size(): 495
+points.size(): 495
+points.size(): 20
+points.size(): 20
+points.size(): 495
+points.size(): 496
+points.size(): 492
+points.size(): 495
+points.size(): 497
+points.size(): 495
+points.size(): 498
+points.size(): 493
+points.size(): 499
+points.size(): 20
+points.size(): 497
+points.size(): 495
+points.size(): 496
+points.size(): 495
+points.size(): 497
+points.size(): 498
+points.size(): 499
+points.size(): 19
+points.size(): 495
+points.size(): 496
+points.size(): 492
+points.size(): 495
+points.size(): 495
+points.size(): 498
+points.size(): 498
+points.size(): 495
+points.size(): 495
+points.size(): 498
+points.size(): 494
+points.size(): 492
+points.size(): 496
+points.size(): 20
+points.size(): 496
+points.size(): 495
+points.size(): 494
+points.size(): 497
+points.size(): 499
+points.size(): 495
+points.size(): 497
+points.size(): 492
+points.size(): 495
+points.size(): 496
+points.size(): 496
+points.size(): 492
+points.size(): 494
+points.size(): 493
+points.size(): 497
+points.size(): 20
+points.size(): 493
+points.size(): 495
+points.size(): 498
+points.size(): 500
+points.size(): 497
+points.size(): 495
+points.size(): 501
+points.size(): 496
+points.size(): 498
+points.size(): 495
+points.size(): 495
+points.size(): 496
+points.size(): 499
+points.size(): 496
+points.size(): 499
+points.size(): 20
+points.size(): 493
+points.size(): 494
+points.size(): 496
+points.size(): 498
+points.size(): 497
+points.size(): 20
+points.size(): 494
+points.size(): 501
+points.size(): 497
+points.size(): 492
+points.size(): 494
+points.size(): 497
+points.size(): 20
+points.size(): 494
+points.size(): 498
+points.size(): 491
+points.size(): 497
+points.size(): 496
+points.size(): 499
+points.size(): 20
+points.size(): 499
+points.size(): 495
+points.size(): 499
+points.size(): 495
+points.size(): 494
+points.size(): 497
+points.size(): 20
+points.size(): 493
+points.size(): 491
+points.size(): 491
+points.size(): 499
+points.size(): 495
+points.size(): 494
+points.size(): 19
+points.size(): 496
+points.size(): 495
+points.size(): 499
+points.size(): 497
+points.size(): 496
+points.size(): 500
+points.size(): 20
+points.size(): 497
+points.size(): 495
+points.size(): 494
+points.size(): 497
+points.size(): 498
+points.size(): 493
+points.size(): 20
+points.size(): 495
+points.size(): 495
+points.size(): 496
+points.size(): 495
+points.size(): 496
+points.size(): 492
+points.size(): 493
+points.size(): 19
+points.size(): 493
+points.size(): 497
+points.size(): 497
+points.size(): 498
+points.size(): 500
+points.size(): 495
+points.size(): 19
+points.size(): 496
+points.size(): 492
+points.size(): 494
+points.size(): 493
+points.size(): 497
+points.size(): 495
+points.size(): 20
+points.size(): 496
+points.size(): 492
+points.size(): 497
+points.size(): 498
+points.size(): 496
+points.size(): 495
+points.size(): 19
+points.size(): 498
+points.size(): 497
+points.size(): 497
+points.size(): 496
+points.size(): 497
+points.size(): 496
+points.size(): 20
+points.size(): 20
+points.size(): 490
+points.size(): 497
+points.size(): 497
+points.size(): 492
+points.size(): 493
+points.size(): 498
+points.size(): 20
+points.size(): 20
+points.size(): 495
+points.size(): 498
+points.size(): 497
+points.size(): 496
+points.size(): 497
+points.size(): 493
+points.size(): 497
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 499
+points.size(): 494
+points.size(): 493
+points.size(): 496
+points.size(): 494
+points.size(): 495
+points.size(): 500
+points.size(): 497
+points.size(): 498
+points.size(): 20
+points.size(): 498
+points.size(): 496
+points.size(): 19
+points.size(): 497
+points.size(): 496
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 496
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 499
+points.size(): 20
+points.size(): 496
+points.size(): 20
+points.size(): 497
+points.size(): 494
+points.size(): 498
+points.size(): 494
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 21
+points.size(): 19
+points.size(): 20
+points.size(): 495
+points.size(): 20
+points.size(): 21
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 19
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+points.size(): 20
+... logging to /root/.ros/log/314d593a-e74d-11ee-b0f4-00155d26ed6d/roslaunch-pty-22697.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;/root/ws/catkin_ws/src/undistortion_scan/launch/undistortion_scan.launch
+[1mstarted roslaunch server http://pty:42173/[0m
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: noetic
+ * /rosversion: 1.16.0
+ * /use_sim_time: True
+
+NODES
+  /
+    playbag (rosbag/play)
+    rviz (rviz/rviz)
+    undistortion_scan (undistortion_scan/undistortion_scan)
+
+auto-starting new master
+[1mprocess[master]: started with pid [22705][0m
+[1mROS_MASTER_URI=http://localhost:11311[0m
+]2;/root/ws/catkin_ws/src/undistortion_scan/launch/undistortion_scan.launch http://localhost:11311
+[1msetting /run_id to 314d593a-e74d-11ee-b0f4-00155d26ed6d[0m
+[1mprocess[rosout-1]: started with pid [22721][0m
+started core service [/rosout]
+[1mprocess[undistortion_scan-2]: started with pid [22724][0m
+[1mprocess[rviz-3]: started with pid [22728][0m
+[1mprocess[playbag-4]: started with pid [22730][0m
+[1m[playbag-4] process has finished cleanly
+log file: /root/.ros/log/314d593a-e74d-11ee-b0f4-00155d26ed6d/playbag-4*.log[0m
+[rviz-3] killing on exit
+[undistortion_scan-2] killing on exit
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m

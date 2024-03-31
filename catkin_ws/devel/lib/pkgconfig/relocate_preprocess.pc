@@ -1,0 +1,8 @@
+prefix=/root/ws/catkin_ws/devel
+
+Name: relocate_preprocess
+Description: Description of relocate_preprocess
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
